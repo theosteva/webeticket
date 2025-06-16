@@ -23,6 +23,11 @@ class ListTickets extends ListRecords
         return static::getModel()::query()->where('user_id', auth()->id());
     }
 
+    public function getTitle(): string
+    {
+        return 'Tiket Saya';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
