@@ -1,0 +1,6 @@
+/* Custom ukuran logo Filament */
+.fi-sidebar-header img, .fi-topbar nav img, .fi-brand-logo img {
+    max-height: 56px !important;
+    height: 56px !important;
+    width: auto !important;
+} 
