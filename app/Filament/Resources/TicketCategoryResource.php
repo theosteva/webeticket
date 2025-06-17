@@ -25,7 +25,15 @@ class TicketCategoryResource extends Resource
             Forms\Components\TextInput::make('name')
                 ->label('Nama Kategori')
                 ->required()
-                ->unique(),
+                ->unique(ignoreRecord: true),
+            Forms\Components\Select::make('urgensi')
+                ->label('Tingkat Urgensi')
+                ->options([
+                    'low' => 'Low',
+                    'medium' => 'Medium',
+                    'high' => 'High',
+                ])
+                ->required(),
         ]);
     }
 
@@ -33,6 +41,12 @@ class TicketCategoryResource extends Resource
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('name')->label('Nama Kategori'),
+            Tables\Columns\BadgeColumn::make('urgensi')->label('Urgensi')
+                ->colors([
+                    'success' => 'low',
+                    'warning' => 'medium',
+                    'danger' => 'high',
+                ]),
         ])
         ->filters([
             //
@@ -61,5 +75,9 @@ class TicketCategoryResource extends Resource
             'create' => Pages\CreateTicketCategory::route('/create'),
             'edit' => Pages\EditTicketCategory::route('/{record}/edit'),
         ];
+    }
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Manage Tickets';
     }
 }

@@ -61,4 +61,9 @@ class PermissionResource extends Resource
             'edit' => Pages\EditPermission::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Manage User';
+    }
 }

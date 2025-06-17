@@ -30,12 +30,39 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('lokasi')
+                    ->label('Lokasi')
+                    ->maxLength(255),
+                Forms\Components\FileUpload::make('photo')
+                    ->label('Foto Profil')
+                    ->image()
+                    ->disk('public')
+                    ->directory('profile-photos')
+                    ->maxSize(2048)
+                    ->dehydrateStateUsing(fn($state) => $state ? basename($state) : null),
+                Forms\Components\TextInput::make('password')
+                    ->password()
+                    ->label('Password')
+                    ->dehydrateStateUsing(fn($state) => !empty($state) ? bcrypt($state) : null)
+                    ->dehydrated(fn($state) => filled($state))
+                    ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
+                    ->same('passwordConfirmation'),
+                Forms\Components\TextInput::make('passwordConfirmation')
+                    ->password()
+                    ->label('Konfirmasi Password')
+                    ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord),
                 Forms\Components\Select::make('roles')
                     ->label('Roles')
                     ->multiple()
                     ->relationship('roles', 'name')
                     ->preload()
                     ->required(),
+                Forms\Components\Select::make('divisions')
+                    ->label('Divisi')
+                    ->multiple()
+                    ->relationship('divisions', 'name')
+                    ->searchable()
+                    ->preload(),
             ]);
     }
 
@@ -74,5 +101,9 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Manage User';
     }
 }

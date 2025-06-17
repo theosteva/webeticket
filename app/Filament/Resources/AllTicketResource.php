@@ -22,8 +22,15 @@ class AllTicketResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('status')
+            Forms\Components\Select::make('status')
                 ->label('Status')
+                ->options([
+                    'Open' => 'Open',
+                    'In Progress' => 'In Progress',
+                    'Pending' => 'Pending',
+                    'Resolved' => 'Resolved',
+                    'Closed' => 'Closed',
+                ])
                 ->required(),
         ]);
     }
@@ -37,20 +44,52 @@ class AllTicketResource extends Resource
                 Tables\Columns\TextColumn::make('tipe')->label('Tipe'),
                 Tables\Columns\TextColumn::make('deskripsi')->label('Deskripsi'),
                 Tables\Columns\TextColumn::make('lampiran')->label('Lampiran')->limit(20),
-                Tables\Columns\TextColumn::make('status')->label('Status'),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
+                    ->colors([
+                        'primary' => 'Open',
+                        'warning' => 'In Progress',
+                        'secondary' => 'Pending',
+                        'success' => 'Resolved',
+                        'danger' => 'Closed'
+                    ]),
+                Tables\Columns\BadgeColumn::make('kategori_urgensi')
+                    ->label('Urgensi')
+                    ->getStateUsing(fn($record) => optional(\App\Models\TicketCategory::where('name', $record->kategori)->first())->urgensi)
+                    ->colors([
+                        'success' => 'low',
+                        'warning' => 'medium',
+                        'danger' => 'high',
+                    ]),
                 Tables\Columns\TextColumn::make('created_at')->label('Tanggal Submit')->dateTime(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
+                    ->label('Edit Tiket')
                     ->color('primary'),
                 Tables\Actions\Action::make('detail_ticket')
                     ->label('Detail Ticket')
                     ->url(fn($record) => url('/all-tickets/'.$record->id))
                     ->color('info')
                     ->button(),
-                Tables\Actions\Action::make('cek_status')
-                    ->label('Cek Status')
-                    ->url(fn($record) => url('/cek-status/'.$record->id))
+                Tables\Actions\Action::make('ubah_status')
+                    ->label('Ubah Status')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'Open' => 'Open',
+                                'In Progress' => 'In Progress',
+                                'Pending' => 'Pending',
+                                'Resolved' => 'Resolved',
+                                'Closed' => 'Closed',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->status = $data['status'];
+                        $record->save();
+                    })
                     ->color('success')
                     ->button(),
             ])

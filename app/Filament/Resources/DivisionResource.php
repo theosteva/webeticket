@@ -72,4 +72,9 @@ class DivisionResource extends Resource
             'edit' => Pages\EditDivision::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Manage User';
+    }
 }

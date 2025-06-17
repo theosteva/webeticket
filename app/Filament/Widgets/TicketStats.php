@@ -11,7 +11,7 @@ class TicketStats extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Total Tiket', Ticket::count()),
+            Stat::make('Total Tiket Masuk', Ticket::count()),
         ];
     }
 }

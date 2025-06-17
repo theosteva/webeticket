@@ -13,6 +13,6 @@ class Division extends Model
 
     public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(\App\Models\User::class);
     }
 }

@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\HasAvatar;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;
@@ -22,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'lokasi',
+        'photo',
     ];
 
     /**
@@ -45,5 +48,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function divisions()
+    {
+        return $this->belongsToMany(\App\Models\Division::class);
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->photo ? asset('storage/' . $this->photo) : null;
     }
 }

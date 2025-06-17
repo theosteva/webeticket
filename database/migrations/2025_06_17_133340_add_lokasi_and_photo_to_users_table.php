@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['division_id']);
-            $table->dropColumn('division_id');
+            $table->string('lokasi')->nullable()->after('email');
+            $table->string('photo')->nullable()->after('lokasi');
         });
     }
 
@@ -23,8 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('division_id')->nullable()->after('id');
-            $table->foreign('division_id')->references('id')->on('divisions')->nullOnDelete();
+            $table->dropColumn(['lokasi', 'photo']);
         });
     }
 };
