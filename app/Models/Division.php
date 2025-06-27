@@ -15,4 +15,9 @@ class Division extends Model
     {
         return $this->belongsToMany(\App\Models\User::class);
     }
+
+    public function tickets()
+    {
+        return $this->belongsToMany(\App\Models\Ticket::class, 'division_ticket');
+    }
 }

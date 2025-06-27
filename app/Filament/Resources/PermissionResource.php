@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PermissionResource\Pages;
 use App\Filament\Resources\PermissionResource\RelationManagers;
-use Spatie\Permission\Models\Permission;
+use App\Models\Permission;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,7 +23,31 @@ class PermissionResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\TextInput::make('name')
+                    ->label('Nama Permission')
+                    ->required(),
+                Forms\Components\TextInput::make('guard_name')
+                    ->label('Guard')
+                    ->default('web')
+                    ->required(),
+                Forms\Components\Select::make('roles')
+                    ->label('Roles')
+                    ->multiple()
+                    ->relationship('roles', 'name')
+                    ->preload(),
+                Forms\Components\Select::make('resource')
+                    ->label('Resource')
+                    ->multiple()
+                    ->options([
+                        'User' => 'User',
+                        'Role' => 'Role',
+                        'Division' => 'Division',
+                        'Permission' => 'Permission',
+                        'Announcement' => 'Announcement',
+                        'AllTicket' => 'AllTicket',
+                    ])
+                    ->required()
+                    ->helperText('Pilih resource yang diatur permission-nya.'),
             ]);
     }
 
@@ -31,7 +55,17 @@ class PermissionResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')->label('Nama Permission')->searchable(),
+                Tables\Columns\TextColumn::make('guard_name')->label('Guard'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Roles')
+                    ->badge()
+                    ->separator(', ')
+                    ->formatStateUsing(fn($state, $record) => collect($record->roles)->pluck('name')->join(', ')),
+                Tables\Columns\TextColumn::make('resource')
+                    ->label('Resource')
+                    ->formatStateUsing(fn($state) => is_array($state) ? implode(', ', $state) : $state),
+                Tables\Columns\TextColumn::make('created_at')->label('Dibuat')->dateTime('d M Y H:i'),
             ])
             ->filters([
                 //
@@ -65,5 +99,30 @@ class PermissionResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return 'Manage User';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true;
     }
 }

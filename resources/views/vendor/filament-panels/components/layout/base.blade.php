@@ -114,6 +114,10 @@
     >
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire?->getRenderHookScopes()) }}
 
+        <nav class="bg-gradient-to-r from-red-500 via-green-500 to-blue-500 shadow text-white">
+            {{-- ... existing code ... --}}
+        </nav>
+
         {{ $slot }}
 
         @livewire(Filament\Livewire\Notifications::class)

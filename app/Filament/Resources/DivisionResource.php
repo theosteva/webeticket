@@ -17,7 +17,7 @@ class DivisionResource extends Resource
 {
     protected static ?string $model = Division::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
     {
@@ -42,7 +42,15 @@ class DivisionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('description')->limit(30),
-                Tables\Columns\TextColumn::make('users.name')->label('Users')->badge()->separator(','),
+                Tables\Columns\TextColumn::make('users.name')
+                    ->label('Users')
+                    ->badge()
+                    ->separator(', ')
+                    ->colors(fn($record) => $record->users->mapWithKeys(function($user) {
+                        $role = $user->roles->first();
+                        return [$user->name => $role?->color ?: '#6366f1'];
+                    })->toArray())
+                    ->formatStateUsing(fn($state, $record) => collect($record->users)->pluck('name')->join(', ')),
             ])
             ->filters([
                 //
@@ -76,5 +84,40 @@ class DivisionResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return 'Manage User';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('Division', $resources)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

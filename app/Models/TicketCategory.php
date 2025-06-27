@@ -9,5 +9,6 @@ class TicketCategory extends Model
     protected $fillable = [
         'name',
         'urgensi',
+        'tipe',
     ];
 }

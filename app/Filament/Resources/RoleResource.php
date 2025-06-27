@@ -34,6 +34,23 @@ class RoleResource extends Resource
                     ->multiple()
                     ->relationship('users', 'name')
                     ->preload(),
+                Forms\Components\Select::make('permissions')
+                    ->label('Permissions')
+                    ->multiple()
+                    ->relationship('permissions', 'name')
+                    ->preload(),
+                Forms\Components\Select::make('allowed_resources')
+                    ->label('Resource yang Diizinkan')
+                    ->multiple()
+                    ->options([
+                        'User' => 'User',
+                        'Role' => 'Role',
+                        'Division' => 'Division',
+                        'Permission' => 'Permission',
+                        'Announcement' => 'Announcement',
+                        // Tambahkan resource lain jika ada
+                    ])
+                    ->helperText('Pilih resource yang dapat diakses oleh role ini.'),
             ]);
     }
 
@@ -60,24 +77,24 @@ class RoleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasRole('admin');
+        return true;
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->hasRole('admin');
+        return true;
     }
 
     public static function canEdit(
         \Illuminate\Database\Eloquent\Model $record
     ): bool {
-        return auth()->user()?->hasRole('admin');
+        return true;
     }
 
     public static function canDelete(
         \Illuminate\Database\Eloquent\Model $record
     ): bool {
-        return auth()->user()?->hasRole('admin');
+        return true;
     }
 
     public static function getPages(): array
@@ -87,8 +104,25 @@ class RoleResource extends Resource
             'create' => Pages\CreateRole::route('/create'),
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
-    }    public static function getNavigationGroup(): ?string
+    }
+
+    public static function getNavigationGroup(): ?string
     {
         return 'Manage User';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('Role', $resources)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

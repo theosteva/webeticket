@@ -39,7 +39,7 @@ class UserResource extends Resource
                     ->disk('public')
                     ->directory('profile-photos')
                     ->maxSize(2048)
-                    ->dehydrateStateUsing(fn($state) => $state ? basename($state) : null),
+                    ->dehydrateStateUsing(fn($state) => is_array($state) ? (isset($state[0]) ? basename($state[0]) : null) : ($state ? basename($state) : null)),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->label('Password')
@@ -72,7 +72,12 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('email'),
-                Tables\Columns\TextColumn::make('roles.name')->label('Roles')->badge()->separator(','),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Roles')
+                    ->badge()
+                    ->separator(', ')
+                    ->colors(fn($record) => $record->roles->mapWithKeys(fn($role) => [$role->name => $role->color ?: '#6366f1'])->toArray())
+                    ->formatStateUsing(fn($state, $record) => collect($record->roles)->pluck('name')->join(', ')),
             ])
             ->filters([
                 //
@@ -105,5 +110,40 @@ class UserResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return 'Manage User';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    {
+        return true;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('User', $resources)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

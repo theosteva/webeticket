@@ -125,7 +125,15 @@
                     :items="$group->getItems()"
                     :label="$group->getLabel()"
                     :attributes="\Filament\Support\prepare_inherited_attributes($group->getExtraSidebarAttributeBag())"
-                />
+                >
+                    @foreach ($group->getItems() as $item)
+                        @if($item->getLabel() === 'E-Ticket')
+                            <div class="text-xs text-gray-500 px-4 pb-2">
+                                Kelola dan pantau semua tiket pengaduan, permintaan, dan status penanganan secara online.
+                            </div>
+                        @endif
+                    @endforeach
+                </x-filament-panels::sidebar.group>
             @endforeach
         </ul>
 

@@ -26,6 +26,13 @@ class TicketCategoryResource extends Resource
                 ->label('Nama Kategori')
                 ->required()
                 ->unique(ignoreRecord: true),
+            Forms\Components\Select::make('tipe')
+                ->label('Jenis Laporan')
+                ->options([
+                    'incident' => 'Incident',
+                    'request' => 'Request',
+                ])
+                ->required(),
             Forms\Components\Select::make('urgensi')
                 ->label('Tingkat Urgensi')
                 ->options([

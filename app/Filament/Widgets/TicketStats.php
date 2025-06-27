@@ -5,6 +5,8 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Ticket;
+use Filament\Widgets\Widget;
+use Illuminate\Support\Carbon;
 
 class TicketStats extends StatsOverviewWidget
 {
@@ -12,6 +14,9 @@ class TicketStats extends StatsOverviewWidget
     {
         return [
             Stat::make('Total Tiket Masuk', Ticket::count()),
+            Stat::make('Tiket Diterima', Ticket::where('status', 'Ticket Diterima')->count()),
+            Stat::make('Tiket Dalam Proses', Ticket::where('status', 'In Progress')->count()),
+            Stat::make('Tiket Selesai', Ticket::where('status', 'Resolved')->count()),
         ];
     }
 }

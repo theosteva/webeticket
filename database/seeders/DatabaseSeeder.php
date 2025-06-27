@@ -19,5 +19,11 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Tambah permission assign ticket jika belum ada
+        \App\Models\Permission::firstOrCreate([
+            'name' => 'assign ticket',
+            'guard_name' => 'web',
+        ]);
     }
 }
