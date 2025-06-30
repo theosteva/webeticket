@@ -63,6 +63,6 @@ class EditTicket extends EditRecord
 
     public function isFormDisabled(): bool
     {
-        return $this->record->status === 'Dalam Proses';
+        return strtolower(trim($this->record->status)) !== 'ticket dibuat';
     }
 }

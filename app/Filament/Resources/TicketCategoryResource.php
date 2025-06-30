@@ -48,6 +48,7 @@ class TicketCategoryResource extends Resource
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('name')->label('Nama Kategori'),
+            Tables\Columns\TextColumn::make('tipe')->label('Jenis Laporan')->formatStateUsing(fn($state) => ucfirst($state))->sortable(),
             Tables\Columns\BadgeColumn::make('urgensi')->label('Urgensi')
                 ->colors([
                     'success' => 'low',
@@ -86,5 +87,20 @@ class TicketCategoryResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return 'Manage Tickets';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('TicketCategory', $resources)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

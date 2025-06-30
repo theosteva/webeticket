@@ -19,7 +19,9 @@ class TicketResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationDescription = 'Kelola dan pantau semua tiket pengaduan, permintaan, dan status penanganan secara online.';
+    protected static ?string $navigationDescription = 'Kelola dan pantau semua tiket pengaduan, permintaan, dan status penanganan secara online.\n\nTiket dengan status "Ditutup" akan dihapus otomatis setelah 30 hari.';
+
+    protected static ?string $navigationGroup = 'E-Ticket';
 
     public static function form(Form $form): Form
     {
@@ -30,7 +32,8 @@ class TicketResource extends Resource
                         ->label('Nama Pelapor')
                         ->default(fn() => auth()->user()?->name)
                         ->required()
-                        ->extraAttributes(['class' => 'mb-4 border-blue-400 focus:border-blue-600']),
+                        ->extraAttributes(['class' => 'mb-4 border-blue-400 focus:border-blue-600'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\Select::make('tipe')
                         ->label('Jenis Laporan')
                         ->options([
@@ -39,7 +42,8 @@ class TicketResource extends Resource
                         ])
                         ->required()
                         ->reactive()
-                        ->extraAttributes(['class' => 'mb-4 border-purple-300 focus:border-purple-500']),
+                        ->extraAttributes(['class' => 'mb-4 border-purple-300 focus:border-purple-500'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
 
                     Forms\Components\Select::make('kategori')
                         ->label('Kategori')
@@ -52,17 +56,33 @@ class TicketResource extends Resource
                         ->required()
                         ->searchable()
                         ->reactive()
-                        ->extraAttributes(['class' => 'mb-4 border-indigo-300 focus:border-indigo-500']),
-                        Forms\Components\Textarea::make('deskripsi')
+                        ->extraAttributes(['class' => 'mb-4 border-indigo-300 focus:border-indigo-500'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
+                    Forms\Components\Textarea::make('deskripsi')
                         ->label('Deskripsi')
                         ->required()
-                        ->extraAttributes(['class' => 'mb-4 border-pink-300 focus:border-pink-500']),
+                        ->extraAttributes(['class' => 'mb-4 border-pink-300 focus:border-pink-500'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\FileUpload::make('lampiran')
                         ->label('Lampiran')
                         ->disk('public')
                         ->directory('lampiran')
                         ->nullable()
-                        ->extraAttributes(['class' => 'mb-4']),
+                        ->extraAttributes(['class' => 'mb-4'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
+                    Forms\Components\Select::make('application_id')
+                        ->label('Aplikasi (Opsional)')
+                        ->options(\App\Models\Application::pluck('name', 'id')->toArray())
+                        ->searchable()
+                        ->nullable()
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
+                    Forms\Components\TextInput::make('kontak')
+                        ->label('Nomor HP atau Email')
+                        ->required()
+                        ->maxLength(100)
+                        ->extraAttributes(['class' => 'mb-4 border-green-400 focus:border-green-600'])
+                        ->helperText('Masukkan nomor HP atau email yang bisa dihubungi, kami akan mengirim notifikasi update dari laporan anda.')
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                 ])->extraAttributes([
                     'class' => 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-8 rounded-xl shadow-lg'
                 ]),
@@ -74,20 +94,24 @@ class TicketResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nomor_tiket')->label('Nomor Tiket')->sortable(),
-                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('kategori')->label('Kategori'),
                 Tables\Columns\TextColumn::make('tipe')->label('Tipe'),
-                Tables\Columns\TextColumn::make('deskripsi')->label('Deskripsi')->limit(40),
-                Tables\Columns\TextColumn::make('lampiran')->label('Lampiran')->limit(20),
                 Tables\Columns\BadgeColumn::make('status')->label('Status')
                     ->colors([
-                        'primary' => fn($state) => strtolower(trim($state)) === 'ticket diterima',
+                        'primary' => fn($state) => strtolower(trim($state)) === 'ticket diterima' || strtolower(trim($state)) === 'ticket dibuat',
                         'success' => fn($state) => strtolower(trim($state)) === 'resolved',
                         'danger' => fn($state) => strtolower(trim($state)) === 'closed',
                         'warning' => fn($state) => strtolower(trim($state)) === 'in progress',
                         'secondary' => fn($state) => strtolower(trim($state)) === 'pending',
                         'info' => fn($state) => strtolower(trim($state)) === 'in review',
-                    ]),
+                    ])
+                    ->formatStateUsing(function ($state, $record) {
+                        if (strtolower(trim($state)) === 'ditutup') {
+                            return 'Ditutup <span class="text-xs text-red-500">(dihapus otomatis setelah 30 hari)</span>';
+                        }
+                        return $state;
+                    })
+                    ->html(),
                 Tables\Columns\TextColumn::make('created_at')->label('Tanggal Dibuat')->dateTime(),
             ])
             ->filters([
@@ -95,11 +119,18 @@ class TicketResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn($record) => strtolower(trim($record->status)) === 'ticket diterima'),
+                    ->label('Lihat Detail')
+                    ->extraAttributes([
+                        'class' => 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded shadow transition-colors',
+                    ])
+                    ->visible(fn($record) => strtolower(trim($record->status)) === 'ticket diterima' || strtolower(trim($record->status)) === 'ticket dibuat'),
                 Tables\Actions\Action::make('cek_status')
                     ->label('Cek Status')
                     ->url(fn($record) => url('/cek-status/'.$record->id))
-                    ->color('success'),
+                    ->color('success')
+                    ->extraAttributes([
+                        'class' => 'bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded shadow transition-colors',
+                    ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

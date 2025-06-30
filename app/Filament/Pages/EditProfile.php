@@ -25,6 +25,7 @@ class EditProfile extends Page implements Forms\Contracts\HasForms
     public $photo;
     public $password;
     public $password_confirmation;
+    public $nomor_hp;
 
     public function mount()
     {
@@ -34,6 +35,7 @@ class EditProfile extends Page implements Forms\Contracts\HasForms
             'email' => $user->email,
             'lokasi' => $user->lokasi,
             'photo' => $user->photo,
+            'nomor_hp' => $user->nomor_hp,
         ]);
     }
 
@@ -47,6 +49,7 @@ class EditProfile extends Page implements Forms\Contracts\HasForms
                 FileUpload::make('photo')->label('Foto Profil')->image()->directory('profile-photos')->maxSize(2048),
                 TextInput::make('password')->label('Password Baru')->password()->dehydrateStateUsing(fn($state) => !empty($state) ? Hash::make($state) : null)->dehydrated(fn($state) => filled($state)),
                 TextInput::make('password_confirmation')->label('Konfirmasi Password')->password(),
+                TextInput::make('nomor_hp')->label('Nomor HP')->tel(),
             ]),
         ];
     }
@@ -58,6 +61,7 @@ class EditProfile extends Page implements Forms\Contracts\HasForms
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->lokasi = $data['lokasi'];
+        $user->nomor_hp = $data['nomor_hp'];
         if (!empty($data['photo'])) {
             $user->photo = $data['photo'];
         }
@@ -71,6 +75,11 @@ class EditProfile extends Page implements Forms\Contracts\HasForms
         }
         $user->save();
         Notification::make()->title('Profil berhasil diperbarui!')->success()->send();
+    }
+
+    public function save()
+    {
+        return $this->submit();
     }
 
     public static function shouldRegisterNavigation(): bool

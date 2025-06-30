@@ -45,6 +45,9 @@ class PermissionResource extends Resource
                         'Permission' => 'Permission',
                         'Announcement' => 'Announcement',
                         'AllTicket' => 'AllTicket',
+                        'Application' => 'Application',
+                        'TicketCategory' => 'TicketCategory',
+                        'PermissionsResource' => 'PermissionsResource',
                     ])
                     ->required()
                     ->helperText('Pilih resource yang diatur permission-nya.'),
@@ -123,6 +126,16 @@ class PermissionResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return true;
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('PermissionsResource', $resources)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

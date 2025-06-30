@@ -18,6 +18,7 @@ class AllTicketResource extends Resource
     protected static ?string $model = Ticket::class;
     protected static ?string $navigationLabel = 'All Ticket';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?string $navigationGroup = 'E-Ticket';
 
     public static function form(Form $form): Form
     {
@@ -51,6 +52,7 @@ class AllTicketResource extends Resource
             Forms\Components\Select::make('status')
                 ->label('Status')
                 ->options([
+                    'Ticket Dibuat' => 'Ticket Dibuat',
                     'Ticket Diterima' => 'Ticket Diterima',
                     'In Progress' => 'In Progress',
                     'Pending' => 'Pending',
@@ -63,17 +65,35 @@ class AllTicketResource extends Resource
                 ->label('Divisi')
                 ->multiple()
                 ->relationship('divisions', 'name')
-                ->required(false),
+                ->required(false)
+                ->disabled(fn ($livewire) => method_exists($livewire, 'getEditEnabledState') ? !$livewire->getEditEnabledState() : false),
             Forms\Components\TextInput::make('id')
                 ->label('ID Ticket')
                 ->disabled()
                 ->dehydrated(false),
+            Forms\Components\Select::make('application_id')
+                ->label('Aplikasi (Opsional)')
+                ->options(\App\Models\Application::pluck('name', 'id')->toArray())
+                ->searchable()
+                ->nullable(),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                $user = auth()->user();
+                if (!$user) return $query->whereRaw('0=1');
+                if ($user->can('assign ticket')) {
+                    // Bisa lihat semua
+                    return $query;
+                }
+                // Hanya lihat ticket yang divisinya di-assign ke user
+                return $query->whereHas('divisions', function ($q) use ($user) {
+                    $q->whereIn('divisions.id', $user->divisions->pluck('id'));
+                });
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('nomor_tiket')->label('Nomor Tiket')->sortable(),
                 Tables\Columns\TextColumn::make('kategori')->label('Kategori')->sortable(),
@@ -83,10 +103,10 @@ class AllTicketResource extends Resource
                     ->sortable()
                     ->colors([
                         'success' => 'Ticket Diterima',
+                        'primary' => 'Ticket Dibuat',
                         'info' => 'In Review',
                         'warning' => 'In Progress',
                         'secondary' => 'Pending',
-                        'primary' => 'In Review',
                         'danger' => 'Closed',
                         'blue' => 'In Progress',
                         'green' => 'Resolved',
@@ -128,6 +148,14 @@ class AllTicketResource extends Resource
                     ])
                     ->action(function ($record, $data) {
                         $record->divisions()->sync($data['divisions']);
+                        // Logging ke TicketLog
+                        $divisions = \App\Models\Division::whereIn('id', $data['divisions'])->pluck('name')->toArray();
+                        \App\Models\TicketLog::create([
+                            'ticket_id' => $record->id,
+                            'user_id' => auth()->id(),
+                            'action' => 'assigned',
+                            'description' => 'Ticket di-assign ke divisi: ' . implode(', ', $divisions),
+                        ]);
                     })
                     ->color('primary')
                     ->extraAttributes([
@@ -140,7 +168,8 @@ class AllTicketResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Status')
                             ->options([
-                                'Tiket Diterima' => 'Tiket Diterima',
+                                'Ticket Dibuat' => 'Ticket Dibuat',
+                                'Ticket Diterima' => 'Ticket Diterima',
                                 'Dalam Proses' => 'Dalam Proses',
                                 'Selesai' => 'Selesai',
                                 'Ditutup' => 'Ditutup',
@@ -184,6 +213,7 @@ class AllTicketResource extends Resource
     {
         return [
             RelationManagers\CommentsRelationManager::class,
+            RelationManagers\TicketLogsRelationManager::class,
         ];
     }
 

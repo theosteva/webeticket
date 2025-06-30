@@ -21,6 +21,10 @@
                     <input type="text" wire:model.defer="lokasi" class="w-full border rounded px-3 py-2 text-gray-800 focus:ring focus:ring-primary-200 focus:outline-none" />
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
+                    <input type="tel" wire:model.defer="nomor_hp" class="w-full border rounded px-3 py-2 text-gray-800 focus:ring focus:ring-primary-200 focus:outline-none" />
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
                     <input type="password" wire:model.defer="password" autocomplete="new-password" class="w-full border rounded px-3 py-2 text-gray-800 focus:ring focus:ring-primary-200 focus:outline-none" />
                 </div>

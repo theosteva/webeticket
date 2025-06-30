@@ -18,9 +18,11 @@ return new class extends Migration
             $table->enum('tipe', ['incident', 'request']);
             $table->text('deskripsi');
             $table->enum('urgensi', ['low', 'medium', 'high']);
+            $table->unsignedBigInteger('application_id')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('application_id')->references('id')->on('applications')->onDelete('set null');
         });
     }
 

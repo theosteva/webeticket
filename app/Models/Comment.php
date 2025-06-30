@@ -10,6 +10,7 @@ class Comment extends Model
         'ticket_id',
         'user_id',
         'body',
+        'type',
     ];
 
     public function ticket()
