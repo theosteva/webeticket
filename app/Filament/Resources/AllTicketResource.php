@@ -99,6 +99,18 @@ class AllTicketResource extends Resource
                 Tables\Columns\TextColumn::make('nomor_tiket')->label('Nomor Tiket')->sortable(),
                 Tables\Columns\TextColumn::make('kategori')->label('Kategori')->sortable(),
                 Tables\Columns\TextColumn::make('tipe')->label('Tipe')->sortable(),
+                Tables\Columns\BadgeColumn::make('kategori_urgensi')
+                    ->label('Urgensi')
+                    ->getStateUsing(fn($record) => optional(\App\Models\TicketCategory::where('name', $record->kategori)->first())->urgensi)
+                    ->colors([
+                        'success' => 'low',
+                        'warning' => 'medium',
+                        'danger' => 'high',
+                    ]),
+                Tables\Columns\TextColumn::make('sla_remaining')
+                    ->label('Sisa Waktu SLA')
+                    ->getStateUsing(fn($record) => $record->sla_remaining)
+                    ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->sortable()
@@ -113,14 +125,6 @@ class AllTicketResource extends Resource
                         'green' => 'Resolved',
                         'red' => 'Closed',
                         'yellow' => 'Pending',
-                    ]),
-                Tables\Columns\BadgeColumn::make('kategori_urgensi')
-                    ->label('Urgensi')
-                    ->getStateUsing(fn($record) => optional(\App\Models\TicketCategory::where('name', $record->kategori)->first())->urgensi)
-                    ->colors([
-                        'success' => 'low',
-                        'warning' => 'medium',
-                        'danger' => 'high',
                     ]),
                 Tables\Columns\BadgeColumn::make('assigned_divisions')
                     ->label('Assigned To')

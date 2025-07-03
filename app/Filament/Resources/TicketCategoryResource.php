@@ -41,6 +41,13 @@ class TicketCategoryResource extends Resource
                     'high' => 'High',
                 ])
                 ->required(),
+            Forms\Components\TextInput::make('sla_hours')
+                ->label('SLA (jam)')
+                ->numeric()
+                ->minValue(1)
+                ->maxValue(168)
+                ->helperText('Maksimal waktu penyelesaian tiket dalam jam untuk kategori ini.')
+                ->nullable(),
         ]);
     }
 

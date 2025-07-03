@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ticket_categories', function (Blueprint $table) {
-            $table->enum('urgensi', ['low', 'medium', 'high'])->default('low')->after('name');
             $table->integer('sla_hours')->nullable()->after('urgensi');
         });
     }
@@ -23,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ticket_categories', function (Blueprint $table) {
-            //
+            $table->dropColumn('sla_hours');
         });
     }
 };

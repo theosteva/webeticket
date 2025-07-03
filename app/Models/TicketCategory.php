@@ -10,5 +10,6 @@ class TicketCategory extends Model
         'name',
         'urgensi',
         'tipe',
+        'sla_hours',
     ];
 }

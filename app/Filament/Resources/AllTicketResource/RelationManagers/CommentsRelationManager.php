@@ -43,23 +43,15 @@ class CommentsRelationManager extends RelationManager
                     $waktu = $record->created_at ? $record->created_at->format('d M Y H:i') : '';
                     $isInternal = $record->type === 'internal';
                     $isPelapor = $record->user_id === optional($record->ticket)->user_id;
-                    $colorIndex = $record->id % 10;
+                    $colorIndex = $record->id % 2;
                     $bgColor = 'comment-bg-' . $colorIndex;
                     $bgStyle = '';
                     switch ($colorIndex) {
                         case 0: $bgStyle = 'background-color: #fef08a !important;'; break;
-                        case 1: $bgStyle = 'background-color: #a7f3d0 !important;'; break;
-                        case 2: $bgStyle = 'background-color: #bae6fd !important;'; break;
-                        case 3: $bgStyle = 'background-color: #fbcfe8 !important;'; break;
-                        case 4: $bgStyle = 'background-color: #ddd6fe !important;'; break;
-                        case 5: $bgStyle = 'background-color: #fde68a !important;'; break;
-                        case 6: $bgStyle = 'background-color: #fca5a5 !important;'; break;
-                        case 7: $bgStyle = 'background-color: #fdba74 !important;'; break;
-                        case 8: $bgStyle = 'background-color: #bbf7d0 !important;'; break;
-                        case 9: $bgStyle = 'background-color: #e0e7ff !important;'; break;
+                        case 1: $bgStyle = 'background-color: #bae6fd !important;'; break;
                     }
                     $badge = $isInternal
-                        ? '<span class="inline-block bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded mr-2">INTERNAL</span>'
+                        ? '<span class="inline-block bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded mr-2">INTERNAL</span>'
                         : '';
                     return '<div class="flex items-start gap-3 mb-2">
                         <img src="' . $foto . '" class="w-10 h-10 rounded-full border shadow" alt="Foto Profil">

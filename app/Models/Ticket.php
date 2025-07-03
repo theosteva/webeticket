@@ -44,6 +44,25 @@ class Ticket extends Model
         return $this->belongsTo(\App\Models\Application::class, 'application_id');
     }
 
+    public function getSlaRemainingAttribute()
+    {
+        $category = \App\Models\TicketCategory::where('name', $this->kategori)->first();
+        if (!$category || !$category->sla_hours) {
+            return null;
+        }
+        $deadline = $this->created_at->copy()->addHours($category->sla_hours);
+        $now = now();
+        if ($now->gt($deadline)) {
+            return 'Lewat SLA';
+        }
+        $diff = $now->diff($deadline);
+        $parts = [];
+        if ($diff->d > 0) $parts[] = $diff->d . ' hari';
+        if ($diff->h > 0) $parts[] = $diff->h . ' jam';
+        if ($diff->i > 0) $parts[] = $diff->i . ' menit';
+        return 'Sisa ' . implode(' ', $parts);
+    }
+
     public function scopeClosedOver30Days($query)
     {
         return $query->where('status', 'Ditutup')->where('updated_at', '<', now()->subDays(30));
