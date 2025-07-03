@@ -63,8 +63,8 @@
     <div class="mt-6">
         <span class="font-semibold text-gray-700 block mb-2">Komentar:</span>
         <div class="space-y-3 max-h-60 overflow-y-auto mb-4">
-            @forelse($ticket->comments as $comment)
-                <div class="bg-gray-50 border rounded p-2">
+            @forelse($ticket->comments as $i => $comment)
+                <div class="border rounded p-2 comment-bg-{{ $i % 10 }}">
                     <div class="flex items-center mb-1">
                         <span class="font-semibold text-blue-700 text-xs mr-2">{{ $comment->user->name ?? 'User' }}</span>
                         <span class="text-gray-400 text-xs">{{ $comment->created_at->format('d-m-Y H:i') }}</span>

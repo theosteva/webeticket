@@ -75,7 +75,8 @@ class AllTicketResource extends Resource
                 ->label('Aplikasi (Opsional)')
                 ->options(\App\Models\Application::pluck('name', 'id')->toArray())
                 ->searchable()
-                ->nullable(),
+                ->nullable()
+                ->disabled(fn ($livewire) => method_exists($livewire, 'getEditEnabledState') ? !$livewire->getEditEnabledState() : false),
         ]);
     }
 
@@ -131,6 +132,32 @@ class AllTicketResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Tanggal Submit')->dateTime()->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('ubah_status')
+                    ->label('Ubah Status')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'Ticket Dibuat' => 'Ticket Dibuat',
+                                'Ticket Diterima' => 'Ticket Diterima',
+                                'Dalam Proses' => 'Dalam Proses',
+                                'Selesai' => 'Selesai',
+                                'Ditutup' => 'Ditutup',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->status = $data['status'];
+                        $record->save();
+                    })
+                    ->color('success')
+                    ->button()
+                    ->hidden(function ($record) {
+                        $user = auth()->user();
+                        if ($record->divisions->isEmpty()) return false;
+                        if (!$user) return true;
+                        return !$user->divisions()->whereIn('divisions.id', $record->divisions->pluck('id'))->exists();
+                    }),
                 Tables\Actions\EditAction::make()
                     ->label('See Detail')
                     ->color('info')
@@ -162,32 +189,6 @@ class AllTicketResource extends Resource
                         'class' => 'rounded px-4 py-2 font-bold shadow bg-green-100 hover:bg-green-200 text-green-700 transition-colors',
                     ])
                     ->visible(fn() => auth()->user()->can('assign ticket')),
-                Tables\Actions\Action::make('ubah_status')
-                    ->label('Ubah Status')
-                    ->form([
-                        Forms\Components\Select::make('status')
-                            ->label('Status')
-                            ->options([
-                                'Ticket Dibuat' => 'Ticket Dibuat',
-                                'Ticket Diterima' => 'Ticket Diterima',
-                                'Dalam Proses' => 'Dalam Proses',
-                                'Selesai' => 'Selesai',
-                                'Ditutup' => 'Ditutup',
-                            ])
-                            ->required(),
-                    ])
-                    ->action(function ($record, $data) {
-                        $record->status = $data['status'];
-                        $record->save();
-                    })
-                    ->color('success')
-                    ->button()
-                    ->visible(function ($record) {
-                        $user = auth()->user();
-                        if ($record->divisions->isEmpty()) return true;
-                        if (!$user) return false;
-                        return $user->divisions()->whereIn('divisions.id', $record->divisions->pluck('id'))->exists();
-                    }),
             ])
             ->bulkActions([])
             ->filters([

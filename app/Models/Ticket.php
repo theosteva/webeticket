@@ -8,7 +8,7 @@ class Ticket extends Model
 {
     protected $fillable = [
         'user_id',
-        'nama_pelapor',
+        'judul',
         'tipe',
         'kategori',
         'deskripsi',

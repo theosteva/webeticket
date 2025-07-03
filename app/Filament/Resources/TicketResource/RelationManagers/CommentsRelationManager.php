@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\AllTicketResource\RelationManagers;
+namespace App\Filament\Resources\TicketResource\RelationManagers;
 
 use App\Models\Comment;
 use Filament\Forms;
@@ -24,7 +24,7 @@ class CommentsRelationManager extends RelationManager
                     'internal' => 'Internal',
                     'public' => 'Ke Pelapor',
                 ])
-                ->default('internal')
+                ->default('public')
                 ->required(),
         ]);
     }
@@ -60,7 +60,7 @@ class CommentsRelationManager extends RelationManager
                     }
                     $badge = $isInternal
                         ? '<span class="inline-block bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded mr-2">INTERNAL</span>'
-                        : '';
+                        : ($record->type === 'public' ? '<span class="inline-block bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded mr-2">KE PELAPOR</span>' : '');
                     return '<div class="flex items-start gap-3 mb-2">
                         <img src="' . $foto . '" class="w-10 h-10 rounded-full border shadow" alt="Foto Profil">
                         <div class="' . $bgColor . ' border rounded-xl px-4 py-2 shadow-sm max-w-xl" style="' . $bgStyle . '">
@@ -90,22 +90,23 @@ class CommentsRelationManager extends RelationManager
         ->modifyQueryUsing(function ($query) {
             $user = auth()->user();
             if (!$user) return $query->whereRaw('0=1');
-            if ($user->can('assign ticket')) {
-                // Internal bisa lihat semua
-                return $query;
-            }
-            // User pelapor hanya bisa lihat komentar type public dan komentarnya sendiri
-            return $query->where(function($q) use ($user) {
-                $q->where('type', 'public')
-                  ->orWhere('user_id', $user->id);
-            });
+            // Ambil ticket id
+            $ticketId = $this->getOwnerRecord()->getKey();
+            $ticket = \App\Models\Ticket::with('divisions.users')->find($ticketId);
+            if (!$ticket) return $query->whereRaw('0=1');
+            $assignedUserIds = $ticket->divisions->flatMap(function($division) {
+                return $division->users->pluck('id');
+            })->unique()->toArray();
+            $allowedUserIds = array_unique(array_merge([$ticket->user_id], $assignedUserIds));
+            // Hanya tampilkan komentar type public
+            return $query->whereIn('user_id', $allowedUserIds)->where('type', 'public');
         });
     }
 
     public function afterCreate($record, $data)
     {
         $ticket = $record->ticket;
-        if ($ticket && $ticket->user && ($record->type === 'public')) {
+        if ($ticket && $ticket->user) {
             $ticket->user->notify(new \App\Notifications\CommentAddedNotification($record));
         }
     }

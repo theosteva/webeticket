@@ -3,4 +3,16 @@
     max-height: 56px !important;
     height: 56px !important;
     width: auto !important;
-} 
+}
+
+/* Warna background berbeda untuk setiap komentar berdasarkan urutan */
+.comment-bg-0 { background-color: #fef08a !important; } /* kuning */
+.comment-bg-1 { background-color: #a7f3d0 !important; } /* hijau muda */
+.comment-bg-2 { background-color: #bae6fd !important; } /* biru muda */
+.comment-bg-3 { background-color: #fbcfe8 !important; } /* pink muda */
+.comment-bg-4 { background-color: #ddd6fe !important; } /* ungu muda */
+.comment-bg-5 { background-color: #fde68a !important; } /* kuning lain */
+.comment-bg-6 { background-color: #fca5a5 !important; } /* merah muda */
+.comment-bg-7 { background-color: #fdba74 !important; } /* oranye muda */
+.comment-bg-8 { background-color: #bbf7d0 !important; } /* hijau pastel */
+.comment-bg-9 { background-color: #e0e7ff !important; } /* biru pastel */ 

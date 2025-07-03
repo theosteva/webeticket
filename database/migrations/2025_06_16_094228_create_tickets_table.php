@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('deskripsi');
             $table->enum('urgensi', ['low', 'medium', 'high']);
             $table->unsignedBigInteger('application_id')->nullable();
+            $table->string('judul')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

@@ -28,11 +28,12 @@ class TicketResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Card::make([
-                    Forms\Components\TextInput::make('nama_pelapor')
-                        ->label('Nama Pelapor')
-                        ->default(fn() => auth()->user()?->name)
+                    Forms\Components\TextInput::make('kontak')
+                        ->label('Kontak HP atau Email')
                         ->required()
-                        ->extraAttributes(['class' => 'mb-4 border-blue-400 focus:border-blue-600'])
+                        ->maxLength(100)
+                        ->extraAttributes(['class' => 'mb-4 border-green-400 focus:border-green-600'])
+                        ->helperText('Masukkan nomor HP atau email yang bisa dihubungi, kami akan mengirim notifikasi update dari laporan anda.')
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\Select::make('tipe')
                         ->label('Jenis Laporan')
@@ -44,7 +45,6 @@ class TicketResource extends Resource
                         ->reactive()
                         ->extraAttributes(['class' => 'mb-4 border-purple-300 focus:border-purple-500'])
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
-
                     Forms\Components\Select::make('kategori')
                         ->label('Kategori')
                         ->options(function (callable $get) {
@@ -58,30 +58,28 @@ class TicketResource extends Resource
                         ->reactive()
                         ->extraAttributes(['class' => 'mb-4 border-indigo-300 focus:border-indigo-500'])
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
+                    Forms\Components\TextInput::make('judul')
+                        ->label('Judul Laporan (Opsional)')
+                        ->maxLength(255)
+                        ->extraAttributes(['class' => 'mb-4 border-orange-400 focus:border-orange-600'])
+                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\Textarea::make('deskripsi')
-                        ->label('Deskripsi')
+                        ->label('Deskripsi Masalah / Permintaan')
                         ->required()
                         ->extraAttributes(['class' => 'mb-4 border-pink-300 focus:border-pink-500'])
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\FileUpload::make('lampiran')
-                        ->label('Lampiran')
+                        ->label('Lampiran (Opsional)')
                         ->disk('public')
                         ->directory('lampiran')
                         ->nullable()
                         ->extraAttributes(['class' => 'mb-4'])
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                     Forms\Components\Select::make('application_id')
-                        ->label('Aplikasi (Opsional)')
+                        ->label('Aplikasi Terkait (Opsional)')
                         ->options(\App\Models\Application::pluck('name', 'id')->toArray())
                         ->searchable()
                         ->nullable()
-                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
-                    Forms\Components\TextInput::make('kontak')
-                        ->label('Nomor HP atau Email')
-                        ->required()
-                        ->maxLength(100)
-                        ->extraAttributes(['class' => 'mb-4 border-green-400 focus:border-green-600'])
-                        ->helperText('Masukkan nomor HP atau email yang bisa dihubungi, kami akan mengirim notifikasi update dari laporan anda.')
                         ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
                 ])->extraAttributes([
                     'class' => 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 p-8 rounded-xl shadow-lg'
@@ -94,6 +92,7 @@ class TicketResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nomor_tiket')->label('Nomor Tiket')->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->label('Tanggal Dibuat')->dateTime(),
                 Tables\Columns\TextColumn::make('kategori')->label('Kategori'),
                 Tables\Columns\TextColumn::make('tipe')->label('Tipe'),
                 Tables\Columns\BadgeColumn::make('status')->label('Status')
@@ -112,7 +111,6 @@ class TicketResource extends Resource
                         return $state;
                     })
                     ->html(),
-                Tables\Columns\TextColumn::make('created_at')->label('Tanggal Dibuat')->dateTime(),
             ])
             ->filters([
                 //
@@ -124,13 +122,6 @@ class TicketResource extends Resource
                         'class' => 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded shadow transition-colors',
                     ])
                     ->visible(fn($record) => strtolower(trim($record->status)) === 'ticket diterima' || strtolower(trim($record->status)) === 'ticket dibuat'),
-                Tables\Actions\Action::make('cek_status')
-                    ->label('Cek Status')
-                    ->url(fn($record) => url('/cek-status/'.$record->id))
-                    ->color('success')
-                    ->extraAttributes([
-                        'class' => 'bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded shadow transition-colors',
-                    ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -142,7 +133,7 @@ class TicketResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\TicketResource\RelationManagers\CommentsRelationManager::class,
         ];
     }
 
