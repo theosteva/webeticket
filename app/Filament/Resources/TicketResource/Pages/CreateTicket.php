@@ -26,6 +26,8 @@ class CreateTicket extends CreateRecord
             'action' => 'created',
             'description' => 'Ticket dibuat',
         ]);
+        // Kirim notifikasi ke user
+        $ticket->user->notify(new \App\Notifications\TicketCreatedNotification($ticket));
         return $ticket;
     }
 }

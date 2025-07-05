@@ -47,9 +47,9 @@ class PermissionResource extends Resource
                         'AllTicket' => 'AllTicket',
                         'Application' => 'Application',
                         'TicketCategory' => 'TicketCategory',
+                        'TicketLog' => 'TicketLog',
                         'PermissionsResource' => 'PermissionsResource',
                     ])
-                    ->required()
                     ->helperText('Pilih resource yang diatur permission-nya.'),
             ]);
     }

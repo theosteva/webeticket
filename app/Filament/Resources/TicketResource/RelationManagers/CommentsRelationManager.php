@@ -14,19 +14,30 @@ class CommentsRelationManager extends RelationManager
 
     public function form(Forms\Form $form): Forms\Form
     {
-        return $form->schema([
+        $user = auth()->user();
+        $userRoles = $user ? $user->roles->pluck('name')->toArray() : [];
+        $allowedRoles = ['Pegawai', 'Supervisor', 'Admin'];
+        $hasAllowedRole = !empty(array_intersect($allowedRoles, $userRoles));
+        
+        $schema = [
             Forms\Components\Textarea::make('body')
                 ->label('Komentar')
                 ->required(),
-            Forms\Components\Select::make('type')
+        ];
+        
+        // Hanya tampilkan dropdown tipe jika user memiliki role yang diizinkan
+        if ($hasAllowedRole) {
+            $schema[] = Forms\Components\Select::make('type')
                 ->label('Tipe Komentar')
                 ->options([
                     'internal' => 'Internal',
                     'public' => 'Ke Pelapor',
                 ])
                 ->default('public')
-                ->required(),
-        ]);
+                ->required();
+        }
+        
+        return $form->schema($schema);
     }
 
     public function table(Tables\Table $table): Tables\Table
@@ -52,7 +63,7 @@ class CommentsRelationManager extends RelationManager
                     }
                     $badge = $isInternal
                         ? '<span class="inline-block bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded mr-2">INTERNAL</span>'
-                        : ($record->type === 'public' ? '<span class="inline-block bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded mr-2">KE PELAPOR</span>' : '');
+                        : '';
                     return '<div class="flex items-start gap-3 mb-2">
                         <img src="' . $foto . '" class="w-10 h-10 rounded-full border shadow" alt="Foto Profil">
                         <div class="' . $bgColor . ' border rounded-xl px-4 py-2 shadow-sm max-w-xl" style="' . $bgStyle . '">
@@ -106,6 +117,17 @@ class CommentsRelationManager extends RelationManager
     public function mutateFormDataBeforeCreate(array $data): array
     {
         $data['user_id'] = auth()->id();
+        
+        // Jika user tidak memiliki role yang diizinkan, otomatis set type ke 'public'
+        $user = auth()->user();
+        $userRoles = $user ? $user->roles->pluck('name')->toArray() : [];
+        $allowedRoles = ['Pegawai', 'Supervisor', 'Admin'];
+        $hasAllowedRole = !empty(array_intersect($allowedRoles, $userRoles));
+        
+        if (!$hasAllowedRole) {
+            $data['type'] = 'public';
+        }
+        
         return $data;
     }
 } 

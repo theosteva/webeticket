@@ -103,4 +103,19 @@ class TicketLogResource extends Resource
             'edit' => Pages\EditTicketLog::route('/{record}/edit'),
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        if (!$user) return false;
+        $permissions = $user->getAllPermissions();
+        foreach ($permissions as $permission) {
+            $resources = $permission->resource ?? [];
+            if (is_string($resources)) $resources = [$resources];
+            if (in_array('TicketLog', $resources)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

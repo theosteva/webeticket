@@ -121,7 +121,6 @@ class TicketResource extends Resource
                     ->extraAttributes([
                         'class' => 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded shadow transition-colors',
                     ])
-                    ->visible(fn($record) => strtolower(trim($record->status)) === 'ticket diterima' || strtolower(trim($record->status)) === 'ticket dibuat'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

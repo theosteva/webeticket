@@ -51,11 +51,30 @@ class EditTicket extends EditRecord
                     'action' => 'status_changed',
                     'description' => 'Status diubah menjadi ' . $data['status'],
                 ]);
-            }
-            if ($data['status'] === 'Resolved' && $this->record->status !== 'Resolved') {
-                $this->record->user->notify(new TicketResolvedNotification($this->record));
-            } else {
-                $this->record->user->notify(new TicketUpdatedNotification($this->record));
+                // Kirim notifikasi ke semua user terkait ticket
+                $notifiedUserIds = [];
+                // Pembuat ticket
+                if ($this->record->user) {
+                    $this->record->user->notify(
+                        $data['status'] === 'Resolved' && $this->record->status !== 'Resolved'
+                            ? new \App\Notifications\TicketResolvedNotification($this->record)
+                            : new \App\Notifications\TicketUpdatedNotification($this->record)
+                    );
+                    $notifiedUserIds[] = $this->record->user->id;
+                }
+                // Semua user division terkait
+                foreach ($this->record->divisions as $division) {
+                    foreach ($division->users as $user) {
+                        if (!in_array($user->id, $notifiedUserIds)) {
+                            $user->notify(
+                                $data['status'] === 'Resolved' && $this->record->status !== 'Resolved'
+                                    ? new \App\Notifications\TicketResolvedNotification($this->record)
+                                    : new \App\Notifications\TicketUpdatedNotification($this->record)
+                            );
+                            $notifiedUserIds[] = $user->id;
+                        }
+                    }
+                }
             }
         }
         return $data;

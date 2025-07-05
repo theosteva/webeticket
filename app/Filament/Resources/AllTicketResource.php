@@ -54,10 +54,9 @@ class AllTicketResource extends Resource
                 ->options([
                     'Ticket Dibuat' => 'Ticket Dibuat',
                     'Ticket Diterima' => 'Ticket Diterima',
-                    'In Progress' => 'In Progress',
-                    'Pending' => 'Pending',
-                    'Resolved' => 'Resolved',
-                    'Closed' => 'Closed',
+                    'Dalam Proses' => 'Dalam Proses',
+                    'Selesai' => 'Selesai',
+                    'Ditutup' => 'Ditutup',
                 ])
                 ->required()
                 ->disabled(fn ($livewire) => method_exists($livewire, 'getEditEnabledState') ? !$livewire->getEditEnabledState() : false),
@@ -107,9 +106,14 @@ class AllTicketResource extends Resource
                         'warning' => 'medium',
                         'danger' => 'high',
                     ]),
-                Tables\Columns\TextColumn::make('sla_remaining')
+                Tables\Columns\BadgeColumn::make('sla_remaining')
                     ->label('Sisa Waktu SLA')
                     ->getStateUsing(fn($record) => $record->sla_remaining)
+                    ->colors([
+                        'danger' => fn($record) => \App\Models\TicketCategory::where('name', $record->kategori)->first()?->sla_hours && (now()->gt($record->created_at->copy()->addHours(\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours)) || now()->diffInMinutes($record->created_at->copy()->addHours(\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours), false) < 60),
+                        'warning' => fn($record) => \App\Models\TicketCategory::where('name', $record->kategori)->first()?->sla_hours && now()->diffInMinutes($record->created_at->copy()->addHours(\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours), false) < (\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours * 60 * 0.25) && now()->diffInMinutes($record->created_at->copy()->addHours(\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours), false) >= 60,
+                        'success' => fn($record) => \App\Models\TicketCategory::where('name', $record->kategori)->first()?->sla_hours && now()->diffInMinutes($record->created_at->copy()->addHours(\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours), false) >= (\App\Models\TicketCategory::where('name', $record->kategori)->first()->sla_hours * 60 * 0.25),
+                    ])
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
@@ -117,15 +121,32 @@ class AllTicketResource extends Resource
                     ->colors([
                         'success' => 'Ticket Diterima',
                         'primary' => 'Ticket Dibuat',
-                        'info' => 'In Review',
-                        'warning' => 'In Progress',
+                        'info' => 'Dalam Review',
+                        'warning' => 'Dalam Proses',
                         'secondary' => 'Pending',
-                        'danger' => 'Closed',
-                        'blue' => 'In Progress',
-                        'green' => 'Resolved',
-                        'red' => 'Closed',
+                        'danger' => 'Ditutup',
+                        'blue' => 'Dalam Proses',
+                        'green' => 'Selesai',
+                        'red' => 'Ditutup',
                         'yellow' => 'Pending',
-                    ]),
+                    ])
+                    ->formatStateUsing(function ($state, $record) {
+                        $map = [
+                            'in progress' => 'Dalam Proses',
+                            'dalam proses' => 'Dalam Proses',
+                            'selesai' => 'Selesai',
+                            'ditutup' => 'Ditutup',
+                            'ticket dibuat' => 'Ticket Dibuat',
+                            'ticket diterima' => 'Ticket Diterima',
+                        ];
+                        $stateKey = strtolower(trim($state));
+                        $label = $map[$stateKey] ?? $state;
+                        if ($stateKey === 'ditutup') {
+                            return $label . ' <span class="text-xs text-red-500">(dihapus otomatis setelah 30 hari)</span>';
+                        }
+                        return $label;
+                    })
+                    ->html(),
                 Tables\Columns\BadgeColumn::make('assigned_divisions')
                     ->label('Assigned To')
                     ->getStateUsing(fn($record) => $record->divisions->isNotEmpty() ? $record->divisions->pluck('name')->join(', ') : 'None')
