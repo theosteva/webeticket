@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TicketStatsExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 abstract class Controller
 {
     //
@@ -39,5 +42,13 @@ abstract class Controller
         }
 
         return redirect()->back()->with('success', 'Komentar berhasil ditambahkan.');
+    }
+
+    /**
+     * Export statistik tiket ke Excel
+     */
+    public function exportTicketStats()
+    {
+        return Excel::download(new TicketStatsExport, 'statistik_tiket.xlsx');
     }
 }

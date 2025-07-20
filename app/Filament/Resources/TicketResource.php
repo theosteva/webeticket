@@ -34,7 +34,7 @@ class TicketResource extends Resource
                         ->maxLength(100)
                         ->extraAttributes(['class' => 'mb-4 border-green-400 focus:border-green-600'])
                         ->helperText('Masukkan nomor HP atau email yang bisa dihubungi, kami akan mengirim notifikasi update dari laporan anda.')
-                        ->disabled(fn($record) => $record && strtolower(trim($record->status)) !== 'ticket dibuat'),
+                        ->disabled(fn($record) => $record && strtolower(trim($record->git)) !== 'ticket dibuat'),
                     Forms\Components\Select::make('tipe')
                         ->label('Jenis Laporan')
                         ->options([

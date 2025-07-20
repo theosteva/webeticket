@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\TicketCategory;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Carbon;
+use Filament\Actions\Action;
 
 class TicketStats extends StatsOverviewWidget
 {
@@ -16,8 +17,8 @@ class TicketStats extends StatsOverviewWidget
         $user = auth()->user();
         if (!$user) return false;
         
-        // Cek apakah user memiliki role Operator atau Supervisor
-        $allowedRoles = ['Operator', 'Supervisor'];
+        // Cek apakah user memiliki role Supervisor
+        $allowedRoles = ['Supervisor'];
         $userRoles = $user->roles->pluck('name')->toArray();
         
         return !empty(array_intersect($allowedRoles, $userRoles));
@@ -68,6 +69,17 @@ class TicketStats extends StatsOverviewWidget
                 ->description('Tiket yang telah ditutup')
                 ->descriptionIcon('heroicon-m-x-circle')
                 ->color('gray'),
+        ];
+    }
+
+    protected function getActions(): array
+    {
+        return [
+            Action::make('downloadStats')
+                ->label('Unduh Statistik')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(route('ticket.exportStats'))
+                ->openUrlInNewTab(),
         ];
     }
 }

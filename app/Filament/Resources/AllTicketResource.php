@@ -85,14 +85,25 @@ class AllTicketResource extends Resource
             ->modifyQueryUsing(function ($query) {
                 $user = auth()->user();
                 if (!$user) return $query->whereRaw('0=1');
+
+                // Cek apakah user melakukan sort manual
+                $sort = request('tableSortColumn');
                 if ($user->can('assign ticket')) {
-                    // Bisa lihat semua
+                    if (!$sort) {
+                        // Tidak ada sort manual, urutkan status Selesai di bawah
+                        return $query->orderByRaw("CASE WHEN status = 'Selesai' THEN 1 ELSE 0 END, created_at DESC");
+                    }
+                    // Jika ada sort manual, biarkan Filament handle
                     return $query;
                 }
                 // Hanya lihat ticket yang divisinya di-assign ke user
-                return $query->whereHas('divisions', function ($q) use ($user) {
+                $q = $query->whereHas('divisions', function ($q) use ($user) {
                     $q->whereIn('divisions.id', $user->divisions->pluck('id'));
                 });
+                if (!$sort) {
+                    return $q->orderByRaw("CASE WHEN status = 'Selesai' THEN 1 ELSE 0 END, created_at DESC");
+                }
+                return $q;
             })
             ->columns([
                 Tables\Columns\TextColumn::make('nomor_tiket')->label('Nomor Tiket')->sortable(),

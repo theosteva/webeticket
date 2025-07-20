@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Green,
             ])
             ->brandLogo(asset('logo-skk.webp'))
+            ->brandLogoHeight('2.5rem')
             ->favicon(asset('favicon.ico'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -42,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
                 \App\Filament\Widgets\TicketStats::class,
+                \App\Filament\Widgets\TicketTrendChart::class, // Tambah chart
             ])
             ->middleware([
                 EncryptCookies::class,
